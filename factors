@@ -1,0 +1,121 @@
+#!/usr/bin/python3
+"""Script Factorizing Numbers from a given file.
+
+This script reads a list of numbers from a file and factorizes each number
+into a product of two smaller numbers. The factorization is done using
+Pollard's rho algorithm.
+
+Example:
+    $ python3 factorizing.py numbers.txt
+"""
+
+import sys
+import time
+import math
+
+
+def pollards_rho(number_to_factorize, start_time):
+    """Implements Pollard's rho algorithm for factorization.
+
+    This function implements Pollard's rho algorithm to factorize a given
+    number. If the number is even, it immediately returns 2. Otherwise, it
+    uses Pollard's rho algorithm to find a nontrivial factor.
+
+    Args:
+        number_to_factorize (int): The number to factorize.
+        start_time (float): The time when the script started running.
+
+    Returns:
+        int: A factor of `number_to_factorize`.
+
+    Raises:
+        SystemExit: If the processing time exceeds 5 seconds.
+    """
+    if number_to_factorize % 2 == 0:
+        return 2
+    x_value = 2
+    y_value = 2
+    gcd_value = 1
+    factorize_func = lambda x: (x**2 + 1) % number_to_factorize
+    while gcd_value == 1:
+        if time.time() - start_time > 5:
+            sys.exit(1)
+        x_value = factorize_func(x_value)
+        y_value = factorize_func(factorize_func(y_value))
+        gcd_value = math.gcd(abs(x_value-y_value), number_to_factorize)
+    return gcd_value
+
+
+def factorize(number, start_time):
+    """Factorizes a number and prints the result.
+
+    This function factorizes a given number into a product of two smaller
+    numbers and prints the result in the format 'n=p*q'.
+
+    Args:
+        number (int): The number to factorize.
+        start_time (float): The time when the script started running.
+    """
+    p_value = pollards_rho(number, start_time)
+    q_value = number // p_value
+    print("{}={}*{}".format(number, q_value, p_value))
+
+
+def read_numbers_from_file(file_path):
+    """Reads numbers from a file.
+
+    This function reads a list of numbers from a file. Each number is expected
+    to be on a separate line. The function returns a list of numbers.
+
+    Args:
+        file_path (str): The path to the file.
+
+    Returns:
+        list of int: A list of numbers read from the file.
+
+    """
+    try:
+        with open(file_path, 'r', encoding='utf-8') as file:
+            numbers = [
+                    int(line.strip())
+                    for line in file
+                    if line.strip().isdigit() and int(line.strip()) > 1
+                    ]
+            return numbers
+    except FileNotFoundError:
+        print("Error opening file")
+        sys.exit(1)
+    except ValueError:
+        print("Error: File contains non-integer values")
+        sys.exit(1)
+
+
+def factorize_numbers(numbers):
+    """Factorizes a list of numbers.
+
+    This function factorizes each number in a given list of numbers and prints
+    the results.
+
+    Args:
+        numbers (list of int): The list of numbers to factorize.
+    """
+    start_time = time.time()
+    for number in numbers:
+        factorize(number, start_time)
+
+
+def main():
+    """Main function.
+
+    This function is the entry point of the script. It reads command line
+    arguments, reads numbers from a file, and factorizes each number.
+    """
+    if len(sys.argv) != 2:
+        print("Usage: factors <file>")
+        sys.exit(1)
+    numbers = read_numbers_from_file(sys.argv[1])
+    factorize_numbers(numbers)
+
+
+if __name__ == "__main__":
+    main()
